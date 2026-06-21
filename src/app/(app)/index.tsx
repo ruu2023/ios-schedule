@@ -1,8 +1,11 @@
 import { useAuth } from '@clerk/clerk-expo';
 import * as Device from 'expo-device';
 import { useRouter } from 'expo-router';
-import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAction } from 'convex/react';
+import { api } from '../../../convex/_generated/api';
+import { pickImage, uploadFile, makeR2Key } from '@/lib/storage';
 
 import { AnimatedIcon } from '@/components/animated-icon';
 import { HintRow } from '@/components/hint-row';
@@ -31,12 +34,26 @@ function getDevMenuHint() {
 }
 
 export default function HomeScreen() {
-  const { signOut } = useAuth()
+  const { signOut, userId } = useAuth()
   const router = useRouter()
+  const generateUploadUrl = useAction(api.r2.generateUploadUrl)
 
   const onSignOut = async () => {
     await signOut()
     router.replace('/(auth)/sign-in')
+  }
+
+  const onTestR2Upload = async () => {
+    try {
+      const file = await pickImage()
+      if (!file || !userId) return
+      const key = makeR2Key(userId, file.mimeType)
+      const signedUrl = await generateUploadUrl({ key, contentType: file.mimeType })
+      await uploadFile(signedUrl, file)
+      Alert.alert('成功', `R2 アップロード成功\nkey: ${key}`)
+    } catch (e: any) {
+      Alert.alert('エラー', e.message)
+    }
   }
 
   return (
@@ -66,6 +83,10 @@ export default function HomeScreen() {
         </ThemedView>
 
         {Platform.OS === 'web' && <WebBadge />}
+
+        <TouchableOpacity style={styles.paywallButton} onPress={onTestR2Upload}>
+          <ThemedText type="small" style={styles.paywallText}>R2 画像アップロードテスト</ThemedText>
+        </TouchableOpacity>
 
         <TouchableOpacity style={styles.paywallButton} onPress={() => router.push('/paywall')}>
           <ThemedText type="small" style={styles.paywallText}>プレミアムプランを見る</ThemedText>
