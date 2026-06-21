@@ -42,6 +42,7 @@ export default function HomeScreen() {
 
   const onSignOut = async () => {
     posthog.capture('signed_out')
+    posthog.reset()
     await signOut()
     router.replace('/(auth)/sign-in')
   }

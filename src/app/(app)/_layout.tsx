@@ -1,6 +1,7 @@
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import { useMutation } from 'convex/react'
 import { DarkTheme, DefaultTheme, Redirect, ThemeProvider } from 'expo-router'
+import { usePostHog } from 'posthog-react-native'
 import { useEffect } from 'react'
 import { useColorScheme } from 'react-native'
 
@@ -13,6 +14,7 @@ export default function AppLayout() {
   const { isSignedIn, isLoaded } = useAuth()
   const { user } = useUser()
   const upsertUser = useMutation(api.users.upsertUser)
+  const posthog = usePostHog()
 
   useEffect(() => {
     if (!user) return
@@ -23,6 +25,10 @@ export default function AppLayout() {
       imageUrl: user.imageUrl ?? undefined,
     })
     initializePurchases(user.id)
+    posthog.identify(user.id, {
+      ...(user.primaryEmailAddress?.emailAddress && { email: user.primaryEmailAddress.emailAddress }),
+      ...(user.fullName && { name: user.fullName }),
+    })
   }, [user?.id])
 
   if (!isLoaded) return null
