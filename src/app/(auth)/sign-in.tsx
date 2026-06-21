@@ -1,6 +1,7 @@
 import { useOAuth } from '@clerk/clerk-expo'
 import * as Linking from 'expo-linking'
 import * as WebBrowser from 'expo-web-browser'
+import { usePostHog } from 'posthog-react-native'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 
@@ -8,6 +9,7 @@ WebBrowser.maybeCompleteAuthSession()
 
 export default function SignInScreen() {
   const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' })
+  const posthog = usePostHog()
 
   const onGoogleSignIn = async () => {
     try {
@@ -16,6 +18,7 @@ export default function SignInScreen() {
       })
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId })
+        posthog.capture('signed_in', { method: 'google' })
       }
     } catch (err) {
       console.error('OAuth error:', err)

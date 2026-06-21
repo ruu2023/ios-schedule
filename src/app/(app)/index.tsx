@@ -1,6 +1,7 @@
 import { useAuth } from '@clerk/clerk-expo';
 import * as Device from 'expo-device';
 import { useRouter } from 'expo-router';
+import { usePostHog } from 'posthog-react-native';
 import { Alert, Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAction } from 'convex/react';
@@ -36,9 +37,11 @@ function getDevMenuHint() {
 export default function HomeScreen() {
   const { signOut, userId } = useAuth()
   const router = useRouter()
+  const posthog = usePostHog()
   const generateUploadUrl = useAction(api.r2.generateUploadUrl)
 
   const onSignOut = async () => {
+    posthog.capture('signed_out')
     await signOut()
     router.replace('/(auth)/sign-in')
   }
@@ -50,6 +53,7 @@ export default function HomeScreen() {
       const key = makeR2Key(userId, file.mimeType)
       const signedUrl = await generateUploadUrl({ key, contentType: file.mimeType })
       await uploadFile(signedUrl, file)
+      posthog.capture('file_uploaded', { mimeType: file.mimeType })
       Alert.alert('成功', `R2 アップロード成功\nkey: ${key}`)
     } catch (e: any) {
       Alert.alert('エラー', e.message)
