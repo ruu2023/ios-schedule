@@ -5,6 +5,67 @@ Expo ベースの iOS アプリ開発スターターキット（Mac 最適化済
 
 ---
 
+## このテンプレートから新しいアプリを作る
+
+### 1. リポジトリ作成
+
+GitHub の [ios-schedule](https://github.com/ruu2023/ios-schedule) を開き、**「Use this template」** → 新しいリポジトリ名で作成してクローン。
+
+### 2. アプリ名・Bundle ID を変更
+
+`app.json` を編集：
+
+```json
+{
+  "expo": {
+    "name": "新しいアプリ名",
+    "slug": "new-app-slug",
+    "scheme": "newappscheme",
+    "ios": {
+      "bundleIdentifier": "com.yourname.newapp"
+    }
+  }
+}
+```
+
+`package.json` の `name` も同様に変更。
+
+### 3. 各サービスで新しいプロジェクトを作成し `.env` を差し替え
+
+```
+EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+EXPO_PUBLIC_CONVEX_URL=https://xxxxx.convex.cloud
+EXPO_PUBLIC_REVENUECAT_API_KEY=test_...
+EXPO_PUBLIC_POSTHOG_API_KEY=phc_...
+EXPO_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
+```
+
+| サービス | 作業 |
+|---|---|
+| [Clerk](https://clerk.com) | 新しいアプリを作成し Publishable Key を取得 |
+| [Convex](https://convex.dev) | `npx convex dev` で新プロジェクトを作成（`.env` に自動追記される） |
+| [RevenueCat](https://revenuecat.com) | 新しいプロジェクトを作成し Bundle ID を登録 |
+| [Cloudflare R2](https://developers.cloudflare.com/r2/) | 新しいバケットを作成し Convex に環境変数を設定 |
+| [PostHog](https://posthog.com) | 新しいプロジェクトを作成し API Key を取得 |
+
+Convex の R2 環境変数は以下で設定：
+
+```bash
+npx convex env set CLOUDFLARE_ACCOUNT_ID <Account ID>
+npx convex env set R2_ACCESS_KEY_ID <Access Key ID>
+npx convex env set R2_SECRET_ACCESS_KEY <Secret Access Key>
+npx convex env set R2_BUCKET_NAME <バケット名>
+```
+
+### 4. iOS プロジェクトを再生成してビルド
+
+```bash
+npx expo prebuild --clean
+npx expo run:ios --device
+```
+
+---
+
 ## スタック
 
 | カテゴリ | ツール | 詳細 |
